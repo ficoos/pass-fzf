@@ -7,54 +7,24 @@ function path2entry() {
 	echo -n "$v"
 }
 
-function entry2path() {
-	echo -n $PREFIX/$1.gpg
-}
-
-function is_tty() {
-	if tty | fgrep pts ; then
-		return 0
-	fi
-
-	return 1
-}
-
-function candidate_selector_zenity() {
-	candidates=$1
-	echo -n "$candidates" | xargs -d '\n' zenity --list "--text=Password Store" --column=entries --mid-search --hide-header
-}
-
 function candidate_selector_fzf() {
-	candidates=$1
-	echo "$candidates" | fzf
+	query=$1
+	candidates=$2
+	echo "$candidates" | fzf -q "$query" --select-1
 }
 
-path=$1
-candidates=$(find "$PREFIX" -name '*.gpg' | while read -r c; do echo $(path2entry "$c"); done | grep -i "$1")
-candidates_num=$(echo "$candidates" | wc -l)
-passfile=
-gui=is_tty
-if [ -z "$candidates" -o $candidates_num == 0 ]; then
-	die "Error: Could not find $path in password store."
-elif [ $candidates_num == 1 ]; then
-	echo $candidates
-	passfile=$(entry2path $candidates)
-else
-	candidate_selector=candidate_selector_fzf
-	if [ $gui == 0 ]; then
-		candidate_selector=candidate_selector_zenity
-	fi
+function list_entries() {
+	find "$PREFIX" -name '*.gpg' | while read -r c; do
+		echo $(path2entry "$c");
+	done
+}
 
-	res=$($candidate_selector "$candidates")
-	if [ -n "$res" ]; then
-		passfile=$PREFIX/$res.gpg
-	fi
-fi
+query="$@"
+candidates=$(list_entries)
 
-if [ -n "$passfile" ]; then
-	$GPG -d "${GPG_OPTS[@]}" "$passfile" | tail -n +2 || exit $?
-	pass_id=${passfile#$PREFIX/}
-	pass_id=${pass_id%.gpg}
-	pass show -c "$pass_id"
+res=$(candidate_selector_fzf "$query" "$candidates")
+if [ -n "$res" ]; then
+	pass show "$res" | tail -n +2 || exit $?
+	pass show -c "$res"
 fi
 
