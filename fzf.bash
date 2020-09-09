@@ -1,28 +1,17 @@
 #!/bin/bash
 
-function path2entry() {
-	local v=$1
-	v=${v#$PREFIX/}
-	v=${v%.gpg}
-	echo -n "$v"
+function candidates() {
+    find "$PREFIX" -name '*.gpg' -printf '%P\n' | sed -e 's:.gpg$::gi'
 }
 
 function candidate_selector_fzf() {
 	query=$1
-	candidates=$2
-	echo "$candidates" | fzf -q "$query" --select-1
-}
-
-function list_entries() {
-	find "$PREFIX" -name '*.gpg' | while read -r c; do
-		echo $(path2entry "$c");
-	done
+	candidates | fzf -q "$query" --select-1
 }
 
 query="$@"
-candidates=$(list_entries)
 
-res=$(candidate_selector_fzf "$query" "$candidates")
+res=$(candidate_selector_fzf "$query")
 if [ -n "$res" ]; then
 	pass show "$res" | tail -n +2 || exit $?
 	pass show -c "$res"
