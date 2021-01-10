@@ -17,3 +17,7 @@ PASSWORD_STORE_ENABLE_EXTENSIONS=true pass fzf
 ```
 $ pass fzf
 ```
+# Alias
+```
+$ alias passs='PASSWORD_STORE_ENABLE_EXTENSIONS=true pass fzf'
+```
