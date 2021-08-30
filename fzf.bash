@@ -1,12 +1,12 @@
 #!/bin/bash
 
 function candidates() {
-    find "$PREFIX" -name '*.gpg' -printf '%P\n' | sed -e 's:.gpg$::gi'
+    find "$PREFIX" -name '*.gpg' | sed -e "s:$PREFIX/::gi" -e 's:.gpg$::gi'
 }
 
 function candidate_selector_fzf() {
-	query=$1
-	candidates | fzf -q "$query" --select-1
+    query=$1
+    candidates | fzf -q "$query" --select-1
 }
 
 function usage() {
@@ -39,4 +39,3 @@ if [ -n "$res" ]; then
 else
     exit 1
 fi
-
